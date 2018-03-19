@@ -1,0 +1,25 @@
+{
+  "name": "maze-solver",
+  "version": "1.0.0",
+  "description": "A simple backtracking solution to maze solving.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "server": "http-server -os ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/V1shvesh/maze-solver.git"
+  },
+  "author": "S. Vishvesh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/V1shvesh/maze-solver/issues"
+  },
+  "homepage": "https://github.com/V1shvesh/maze-solver#readme",
+  "devDependencies": {
+    "electron": "^1.8.3"
+  },
+  "dependencies": {}
+}
