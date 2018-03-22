@@ -1,76 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="./assets/scripts/phaser.min.js"></script>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="./assets/scripts/phaser.min.js"></script>
 </head>
 <body>
-    <script type="text/javascript">
-        const div = document.querySelector('.game');
-        let game = new Phaser.Game(32*30, 32*30, Phaser.AUTO, div, { preload: preload, create: create, update: update });
-
-        function preload() {
-            game.load.spritesheet('sokoban', "assets/images/sokoban_tilesheet.png", 64, 64);
-            game.load.tilemap('lvl', 'assets/tilemap/lvl.json', null, Phaser.Tilemap.TILED_JSON);
-            game.load.image('tiles', "assets/images/sokoban_tilesheet.png");
-            game.load.image('star', 'assets/images/star.png');
-        }
-        function create() {
-
-            game.physics.startSystem(Phaser.Physics.ARCADE);
-            
-            // Ground
-            map = game.add.tilemap('lvl');
-            map.addTilesetImage('sokoban_tilesheet','tiles');
-            let ground = map.createLayer('Ground');
-            ground.resizeWorld();
-
-            //  Walls
-            walls = map.createLayer('Walls');
-            map.setCollisionBetween(1, 999, true, 'Walls');
-
-            // Player
-            player = game.add.sprite(65,65, 'sokoban', 52);
-            // player.scale.setTo(62/64, 62/64);
-            game.physics.enable(player);
-            player.body.collideWorldBounds = true;
-            player.animations.add('left', [83,81,82,81], 8, true);
-            player.animations.add('right', [80,78,79,78], 8, true);
-            player.animations.add('down', [54,52,53,52], 8, true);
-            player.animations.add('up', [56,55,57,55], 8, true);
-            cursors = game.input.keyboard.createCursorKeys();
-
-        }
-        function update() {
-            const v = 300;
-            game.physics.arcade.collide(player, walls);
-            player.body.velocity.x = 0;
-            player.body.velocity.y = 0;
-            if(cursors.left.isDown) {
-                player.animations.play('left');
-                player.y = Phaser.Math.snapTo(player.y,64);
-                player.body.velocity.x = -v;
-            } else if(cursors.right.isDown) {
-                if(player.body.blocked.right){
-                       
-                }
-                player.animations.play('right');
-                player.y = Phaser.Math.snapTo(player.y,64);
-                player.body.velocity.x = v;
-            } else if(cursors.up.isDown) {
-                player.animations.play('up');
-                player.x = Phaser.Math.snapTo(player.x,64);
-                player.body.velocity.y = -v;
-            } else if(cursors.down.isDown) {
-                player.animations.play('down');
-                player.x = Phaser.Math.snapTo(player.x,64);
-                player.body.velocity.y = v;
-            } else {
-                
-                player.animations.stop();
-                player.frame = 52;
-            }
-        }
-    </script>
     <div class="game"></div>
+    <script src="./renderer.js"></script>
 </body>
 </html>

@@ -8,8 +8,11 @@ let win;
 function createWindow() {
 	win = new BrowserWindow({width: 1000, height: 1000})
 
-	win.loadURL('http://localhost:8080/')
-	console.log(backtrack.WhoAmI())
+	 win.loadURL(url.format({
+      pathname: path.join(__dirname, 'index.html'),
+      protocol: 'file:',
+      slashes: true
+    }))
 
 	win.on('closed', ()=>{
 		win = null
