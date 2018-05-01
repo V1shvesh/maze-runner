@@ -1,13 +1,21 @@
 const backtrack = require('./build/Release/backtrack');
-console.log(backtrack.WhoAmI());
+// console.log(backtrack.WhoAmI());
+const query = document.querySelector('.overlay');
+
+function pixeltoBlock(player){
+    let block = {};
+    block.x = parseInt((player.body.left)/64)-1;
+    block.y = parseInt((player.body.top)/64)-1;
+    return block;
+}
+
 
 const div = document.querySelector('.game');
-let game = new Phaser.Game(32*30, 32*30, Phaser.AUTO, div, { preload: preload, create: create, update: update });
+let game = new Phaser.Game(32*30, 32*30, Phaser.AUTO, div, { preload: preload, create: create, update: update, render: render });
 function preload() {
     game.load.spritesheet('sokoban', "assets/images/sokoban_tilesheet.png", 64, 64);
     game.load.tilemap('lvl', 'assets/tilemap/lvl.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('tiles', "assets/images/sokoban_tilesheet.png");
-    game.load.image('star', 'assets/images/star.png');
 }
 function create() {
 
@@ -43,58 +51,78 @@ function create() {
     player.animations.add('right', [80,78,79,78], 8, true);
     player.animations.add('down', [54,52,53,52], 8, true);
     player.animations.add('up', [56,55,57,55], 8, true);
-    
+    player.body.stopVelocityOnCollide = true;
+
     cursors = game.input.keyboard.createCursorKeys();
 
     path = {
         x:0,
         y:0,
-        temp: 0
     };
+    block = {};
+    debugText = "";
 }
 function update() {
     const v = 250;
     game.physics.arcade.collide(player, walls);
+
+    // Debug Info
     player.body.velocity.x = 0;
     player.body.velocity.y = 0;
+
+    debugText = "<pre>Blocked\n";
+    for(i in player.body.blocked){
+        debugText+=i+":"+player.body.blocked[i]+" ";
+    }
+    debugText += "</pre>"
+    query.innerHTML=debugText;
+
+    block = pixeltoBlock(player)
+    // WIP
+    try{        
+        if(block.y==path.y){
+            player.body.velocity.y = v;
+            if(player.body.touching.down)
+                throw "down"
+        }
+    } catch(e){
+        
+    }
+
     if(cursors.left.isDown) {
         player.animations.play('left');
-        path.temp = parseInt((player.body.left+32)/64)-1;
-        if(path.temp<path.x){
+        if(block.x<path.x){
             if(!crumbs[path.x-1][path.y].visible)
                 crumbs[path.x][path.y].visible = true;
             crumbs[path.x-1][path.y].visible = false;
             path.x--;
-            console.log(path.temp,path.y,path.x-1,crumbs[path.x-1]);
+            // console.log(path.temp,path.y,path.x-1,crumbs[path.x-1]);
         }
         player.body.velocity.x = -v;
     } else if(cursors.right.isDown) {
         player.animations.play('right');
-        path.temp = parseInt((player.body.left+32)/64)-1;
-        if(path.temp>path.x){
+        if(block.x>path.x){
             if(!crumbs[path.x+1][path.y].visible)
                 crumbs[path.x][path.y].visible = true;
             crumbs[path.x+1][path.y].visible = false;
-            console.log(path.temp,path.y,path.x);
+            // console.log(path.temp,path.y,path.x);
             path.x++;
         }
         player.body.velocity.x = v;
     } else if(cursors.up.isDown) {
         player.animations.play('up');
-        path.temp = parseInt((player.body.top+32)/64)-1;
-        if(path.temp<path.y){
+        if(block.y<path.y){
             if(!crumbs[path.x][path.y-1].visible){
                 crumbs[path.x][path.y].visible = true;
             }
             crumbs[path.x][path.y-1].visible = false;
-            console.log(path.temp,path.y,path.x);
+            // console.log(path.temp,path.y,path.x);
             path.y--;
         }
         player.body.velocity.y = -v;
     } else if(cursors.down.isDown) {
         player.animations.play('down');
-        path.temp = parseInt((player.body.top+32)/64)-1;
-        if(path.temp>path.y){
+        if(block.y>path.y){
             if(!crumbs[path.x][path.y+1].visible){
                 crumbs[path.x][path.y].visible = true;
             }
@@ -107,4 +135,7 @@ function update() {
         player.animations.stop();
         player.frame = 52;
     }
+}
+function render(){
+    game.debug.body(player);
 }

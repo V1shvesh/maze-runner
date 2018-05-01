@@ -1,3 +1,13 @@
 .game{
 	width: 56*15px;
 }
+.overlay{
+	z-index: 1;
+	position: absolute;
+	top: 0;
+	left: 5px;
+	width: 450px;
+	height: 10vh;
+	background: rgba(5,5,5,0.5);
+	color: moccasin;
+}
