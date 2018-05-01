@@ -51,16 +51,22 @@ function create() {
     player.animations.add('right', [80,78,79,78], 8, true);
     player.animations.add('down', [54,52,53,52], 8, true);
     player.animations.add('up', [56,55,57,55], 8, true);
-    player.body.stopVelocityOnCollide = true;
+    // player.body.stopVelocityOnCollide = true;
 
     cursors = game.input.keyboard.createCursorKeys();
 
+    // keeps track of the path generated
     path = {
         x:0,
         y:0,
     };
+    
+    // denotes the block on which the player stands
     block = {};
+    stop = false;
     debugText = "";
+    finalState = "";
+    finish = false;
 }
 function update() {
     const v = 250;
@@ -74,20 +80,36 @@ function update() {
     for(i in player.body.blocked){
         debugText+=i+":"+player.body.blocked[i]+" ";
     }
-    debugText += "</pre>"
+    debugText += `\n${finalState}</pre>`
     query.innerHTML=debugText;
+
+    // To end it all
+    if(finish)
+        return;
 
     block = pixeltoBlock(player)
     // WIP
-    try{        
-        if(block.y==path.y){
+    try{
+        if(block.x==12&&block.y==12){
+            finish = true;
+            console.log
+        }
+        if(!stop&&block.y==path.y){
             player.body.velocity.y = v;
-            if(player.body.touching.down)
-                throw "down"
+            if(player.body.blocked.down||crumbs[path.x][path.y+1].visible==true){
+                stop = true;
+                throw "down";
+            }
+        }
+        if(block.y>path.y){
+            crumbs[path.x][path.y].visible = true;
+            console.log(path.y,block.y);
+            path.y++;
         }
     } catch(e){
-        
+        console.log(e);
     }
+
 
     if(cursors.left.isDown) {
         player.animations.play('left');
