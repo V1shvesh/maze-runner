@@ -32,7 +32,7 @@ const div = document.querySelector('.game');
 let game = new Phaser.Game(32*30, 32*30, Phaser.AUTO, div, { preload: preload, create: create, update: update});
 function preload() {
     game.load.spritesheet('sokoban', "assets/images/sokoban_tilesheet.png", 64, 64);
-    game.load.tilemap('lvl', 'assets/tilemap/lvl.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.tilemap('lvl', 'assets/tilemap/lvl1.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('tiles', "assets/images/sokoban_tilesheet.png");
 }
 function create() {
@@ -53,12 +53,20 @@ function create() {
             crumbs[i][j].visible = false;
         }
     }
+
     //  Walls
     walls = map.createLayer('Walls');
     map.setCollisionBetween(1, 999, true, 'Walls');
-    walls.debug = true;
-
+    wallTiles = walls.getTiles(0,0,32*30,32*30);
     
+    // Wall Matrix
+    wallBlocks = Array(13).fill(0).map(x=>Array(13));
+    for(let i=0; i<13; i++){
+        for(let j=0; j<13; j++){
+            wallBlocks[i][j] = wallTiles[(j+1)*60+(i+1)*2].index!=-1?false:true;
+        }
+    }
+    console.log(wallBlocks);
 
     //LvlEnd
     lvlend = game.add.sprite(13*64,13*64, 'sokoban', 63);
@@ -80,22 +88,23 @@ function create() {
     path = {
         x:0,
         y:0,
+        stack: new Stack(),
         lastDir: 2
     };
     
     // denotes the block on which the player stands
     block = {};
     curDir = 2;
-    
-
-    // HACK: Remove Soon!
 
     debugText = "";
     finalState = "";
-    finish = true;
+
+    lastState = null;
+    rollback = false;
+    finish = false;
 }
 function update() {
-    const v = 60;
+    const v = 65;
     game.physics.arcade.collide(player, walls);
 
     // Debug Info
@@ -115,6 +124,7 @@ function update() {
         player.frame = 52;
         return;
     }
+
     block = pixeltoBlock(player);
     // WIP: The main backtracking solution
     try{
@@ -132,26 +142,43 @@ function update() {
             player.body.velocity.y = -v;
             if(player.body.blocked.up)
                 throw 0;
-            if(crumbs[path.x][path.y-1].visible==true)
-                throw 0;            
+            if(path.y>0&&crumbs[path.x][path.y-1].visible==true){
+                if(rollback){
+                    crumbs[path.x][path.y-1].visible==false;
+                } else {
+                    throw 0;
+                }
+            }            
         }
         if(block.y<path.y){
             crumbs[path.x][path.y].visible = true;
             path.y--;
+            if(rollback){
+                rollback = false;
+                throw 2;
+            }
             throw 1;
         }
         //1. Right
-        if(curDir==1&&block.x==path.x){
+        if(curDir==1 && block.x==path.x){
             player.animations.play('right');
             player.body.velocity.x = v;
             if(player.body.blocked.right)
                 throw 0;
-            if(crumbs[path.x+1][path.y].visible==true)
-                throw 0;
+            if(path.x<12 && crumbs[path.x+1][path.y].visible==true)
+                if(rollback){
+                    crumbs[path.x+1][path.y].visible==false;
+                } else {
+                    throw 0;
+                }
         }
         if(block.x>path.x){
             crumbs[path.x][path.y].visible = true;
             path.x++;
+            if(rollback){
+                rollback = false;
+                throw 2;
+            }
             throw 1;
         }
         //2. Down
@@ -160,12 +187,20 @@ function update() {
             player.body.velocity.y = v;
             if(player.body.blocked.down)
                 throw 0;
-            if(crumbs[path.x][path.y+1].visible==true)
-                throw 0;
+            if(path.y<12 && crumbs[path.x][path.y+1].visible==true)
+                if(rollback){
+                    crumbs[path.x][path.y+1].visible==false;
+                } else {
+                    throw 0;
+                }
         }
         if(block.y>path.y){
             crumbs[path.x][path.y].visible = true;
             path.y++;
+            if(rollback){
+                rollback = false;
+                throw 2;
+            }
             throw 1;
         }
         //3. Left
@@ -174,30 +209,23 @@ function update() {
             player.body.velocity.x = -v;
             if(player.body.blocked.left)
                 throw 0;
-            if(crumbs[path.x-1][path.y].visible==true)
-                throw 0;
+            if(path.x>0 && crumbs[path.x-1][path.y].visible==true)
+                if(rollback){
+                    crumbs[path.x-1][path.y].visible==false;
+                } else {
+                    throw 0;
+                }
         }
         if(block.x<path.x){
             crumbs[path.x][path.y].visible = true;
             path.x--;
+            if(rollback){
+                rollback = false;
+                throw 2;
+            }
             throw 1;
         }
     } catch(e){
-        console.log(e,path,block,curDir);
-        if(e == 0){
-            //Going Back to the last block
-            player.body.velocity.x = 0;
-            player.body.velocity.y = 0;
-            if(path.lastDir == (curDir+2)%4){
-                finish = true;
-            } else {
-                    curDir = (curDir+1)%4;
-                }
-        }
-        if(e === 1){
-            path.lastDir = curDir;
-            curDir = (curDir+3)%4;
-        }
     }
     // WIP: end
 }
